@@ -5,7 +5,28 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from settings import TEST_MODE
+import traceback, time
 
+
+def exception_handler(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print("If date selection is not working, probably the bot is not fast enough to catch it :/ Trying again...")
+            return f"Exception: {type(e).__name__}, Traceback: {traceback.format_exc()}"
+    return wrapper
+
+@exception_handler
+def highlight(element):
+    """Highlights (blinks) a Selenium Webdriver element"""
+    driver = element._parent
+    def apply_style(s):
+        driver.execute_script("arguments[0].setAttribute('style', arguments[1]);",element, s)
+    original_style = element.get_attribute('style')
+    apply_style("background: yellow; border: 2px solid red;")
+    time.sleep(3)
+    apply_style(original_style)
 
 # This is frankly very, very bad and should be rewritten with requests
 # when I get a test account
@@ -19,13 +40,17 @@ def legacy_reschedule(driver):
             )
         )
     )
+    # highlight(date_selection_box)
+    # time.sleep(5)
     date_selection_box.click()
 
     # Move to next month
+    @exception_handler
     def next_month():
         driver.find_element(By.XPATH, "/html/body/div[5]/div[2]/div/a").click()
 
     # Check if avalible in current month
+    @exception_handler
     def cur_month_ava():
         month = driver.find_element(By.XPATH, "/html/body/div[5]/div[1]/table/tbody")
         dates = month.find_elements(By.TAG_NAME, "td")
@@ -36,6 +61,7 @@ def legacy_reschedule(driver):
         return False
 
     # Check the nearest slot is avalible in # months (0 for this month, 1 for next month...) and move to the month
+    @exception_handler
     def nearest_ava():
         ava_in = 0
         cur = cur_month_ava()

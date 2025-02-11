@@ -32,7 +32,12 @@ SHOW_GUI = False  # toggle to false if you don't want to see the browser
 # For testing, also set a date really far away so the app actually tries to reschedule
 TEST_MODE = False
 
+SELENIUM_PATH = os.environ.get("SELENIUM_PATH")
+
 # Don't change the following unless you know what you are doing
+DEPLOYMENT = os.environ.get("DEPLOYMENT", False)
+# CHROME_DRIVER_PATH = "/usr/local/bin/chromedriver"
+CHROME_DRIVER_PATH = os.environ.get("CHROME_DRIVER_PATH")
 DETACH = True
 NEW_SESSION_AFTER_FAILURES = 5
 NEW_SESSION_DELAY = 60 * 15

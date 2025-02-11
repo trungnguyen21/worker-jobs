@@ -20,14 +20,23 @@ from settings import *
 def get_chrome_driver() -> WebDriver:
     options = webdriver.ChromeOptions()
     if not SHOW_GUI:
-        options.add_argument("headless")
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         options.add_argument("window-size=1920x1080")
         options.add_argument("disable-gpu")
         options.add_argument('user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36')
     options.add_experimental_option("detach", DETACH)
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=options
-    )
+    print("We on deployment: ", DEPLOYMENT)
+    if not DEPLOYMENT:
+        chrome_driver_path=ChromeDriverManager().install()
+        driver = webdriver.Chrome(
+            service=Service(chrome_driver_path), options=options
+        )
+    else:
+        print("Connecting to remote server....")
+        print("Chrome driver path: ", SELENIUM_PATH)
+        driver = webdriver.Remote(command_executor=SELENIUM_PATH, options=options)
     return driver
 
 
@@ -104,7 +113,8 @@ def reschedule(driver: WebDriver) -> bool:
         dates = get_available_dates(driver, date_request_tracker)
         if not dates:
             print("Error occured when requesting available dates")
-            sleep(DATE_REQUEST_DELAY)
+            print("Probably the system is busy (Consulate side)")
+            sleep(DATE_REQUEST_DELAY * 60) # Wait for 30 minutes
             continue
         earliest_available_date = dates[0]
         latest_acceptable_date = datetime.strptime(

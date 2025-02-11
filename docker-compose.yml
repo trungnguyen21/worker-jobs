@@ -1,0 +1,18 @@
+services:
+  selenium:
+    image: seleniarm/standalone-chromium 
+    container_name: selenium_container
+    shm_size: "2gb"  # Prevents Chrome crashes due to shared memory issues
+    ports:
+      - "4444:4444"
+  bot:
+    build: .
+    container_name: rescheduler_container
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DEPLOYMENT=True
+    depends_on:
+      - selenium
